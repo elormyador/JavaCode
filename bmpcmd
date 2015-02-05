@@ -1,0 +1,235 @@
+import java.io.*;
+import java.util.Scanner;
+
+public class Main 
+{
+	public static void main(String[] args) throws IOException
+	{
+		/*
+		Scanner conScanner = new Scanner(System.in);
+		FileHandler obj = new FileHandler("image.bmp");
+		obj.readFile();
+		System.out.print("\nEnter Image height: ");
+		int height = conScanner.nextInt();
+		System.out.print("Enter Image width: ");
+		int width = conScanner.nextInt();
+		System.in.skip(System.in.available());
+		obj.writeBmpFile("testfile.bmp", width, height);
+		obj.setFile("testfile.bmp");
+		obj.readFile();
+		*/
+		FileHandler obj = new FileHandler("image.bmp");
+		obj.writeDataFile("datafile");
+		obj.readDataFile("datafile");
+	}
+}
+
+class FileHandler{
+	// Open File
+	int i;
+	FileInputStream fileIn;
+	
+	FileHandler(String Str) {
+		try {
+			fileIn = new FileInputStream(Str);
+		}
+		catch (FileNotFoundException exc){
+			System.out.println("File not found!");
+			return;
+		}
+	}
+	
+	void setFile(String Str) {
+		try {
+			fileIn = new FileInputStream(Str);
+		}
+		catch (FileNotFoundException exc){
+			System.out.println("File not found!");
+			return;
+		}
+	}
+	
+	// Read File
+	void readFile(){
+		try {
+			System.out.println("Reading file...");
+			i = fileIn.read();
+			while (i != -1)
+			{
+				System.out.print(i + " ");
+				i = fileIn.read();
+			}
+			System.out.println("");
+		}
+		catch (IOException exc)
+		{
+			System.out.println("Error encountered while reading file.");
+		}
+		finally{
+			try{
+				System.out.println("Closing File.");
+				fileIn.close();
+			}
+			catch (IOException exc){
+				System.out.println("Error encountered while trying to close file.");
+			}	
+		}
+	}
+	
+	void writeDataFile(String Str)
+	{
+		try (FileOutputStream fileOut = new FileOutputStream(Str))
+		{
+			try(DataOutputStream dataOut = new DataOutputStream(fileOut))
+			{
+				dataOut.writeInt(22);
+				dataOut.writeInt(406);
+				dataOut.writeInt(77);
+				dataOut.writeInt(35);
+			}
+			catch (IOException exc)
+			{
+				
+			}
+		}
+		catch (FileNotFoundException exc)
+		{
+			
+		}
+		catch (IOException exc)
+		{
+			
+		}
+	}
+	
+	void readDataFile(String Str)
+	{
+		try (FileInputStream fileIn = new FileInputStream(Str))
+		{
+			try(DataInputStream dataIn = new DataInputStream(fileIn))
+			{
+				System.out.println(dataIn.readInt());
+				System.out.println(dataIn.readInt());
+				System.out.println(dataIn.readInt());
+				System.out.println(dataIn.readInt());
+			}
+			catch (IOException exc)
+			{
+				
+			}
+		}
+		catch (FileNotFoundException exc)
+		{
+			
+		}
+		catch (IOException exc)
+		{
+			
+		}
+	}
+	
+	void writeBmpFile(String Str, int width, int height)
+	// This Method outputs a bitmap image file via command line (a solution far greater than Adobe Photoshop).
+	{
+		FileOutputStream fileOut = null;
+		
+		try {
+			fileOut = new FileOutputStream(Str);
+			byte[] header = new byte[] {(byte) 66,(byte) 77,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,
+					                    (byte) 0,(byte) 0,(byte) 54,(byte) 0,(byte) 0,(byte) 0,(byte) 40,(byte) 0,
+					                    (byte) 0,(byte) 0,(byte) 5,(byte) 0,(byte) 0,(byte) 0,(byte) 3,(byte) 0,
+					                    (byte) 0,(byte) 0,(byte) 1,(byte) 0,(byte) 24,(byte) 0,(byte) 0,(byte) 0,
+					                    (byte) 0,(byte) 0,(byte) 48,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,
+					                    (byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,
+					                    (byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0,(byte) 0};
+			
+			int widthPadding = width%4;
+			
+			int imageSize = height*(3*width+widthPadding); //size of image array (3 bytes per pixel + padding)
+			
+			//Sets bitmap header file information
+			header[2] = (byte) (header.length + imageSize); 
+			header[18] = (byte) width;
+			header[22] = (byte) height;
+			header[34] = (byte) imageSize;
+			
+			byte[][][] imageArray = new byte[height][3*width][3];
+			
+			System.out.println("Enter Image Data. Press enter for Each line.");
+			for(int i=0; i < height; i++)
+			{
+				System.out.print("Enter Row " + i + ":");
+				int bytesRead = 0;
+				byte b;
+				for(int j=0; j < width; j++)
+				{
+					b = (byte) System.in.read();
+					while ((b == 13) || (b == 10)){
+						b = (byte) System.in.read();
+					}
+					imageArray[i][j][0]=b;
+					bytesRead+=1;
+					
+					b = (byte) System.in.read();
+					while ((b == 13) || (b == 10)){
+						b = (byte) System.in.read();
+					}
+					imageArray[i][j][1]=b;
+					bytesRead+=1;
+					
+					b = (byte) System.in.read();
+					while ((b == 13) || (b == 10)){
+						b = (byte) System.in.read();
+					}
+					imageArray[i][j][2]=b;
+					bytesRead+=1;
+				} 
+				//System.in.skip(System.in.available());
+				//System.out.print("Read " + bytesRead + " bytes: ");
+				//for(int j=0; j < width; j++)
+				//{
+					//System.out.print(imageArray[i][j]+ " ");
+				//}
+				//System.out.println("");
+			}
+			
+			System.out.println("Writing to file...");
+			
+			System.out.println("Writting Header.");
+			for(int i=0; i < header.length; i++)
+			{
+				fileOut.write(header[i]);
+			}
+			for(int i=height-1; i > -1; i--)
+			{
+				System.out.println("Writting line " + i + ".");
+				for(int j=0; j < width; j++)
+				{
+					fileOut.write(imageArray[i][j][0]);
+					fileOut.write(imageArray[i][j][1]);
+					fileOut.write(imageArray[i][j][2]);
+				}
+				for(int k=0; k < widthPadding; k++)
+				{
+					fileOut.write((byte) 0);
+				}
+			}
+			System.out.println("File write complete.");
+		}
+		catch (IOException exc)
+		{
+			System.out.println("Error encountered while writing file.");
+		}
+		finally{
+			try{
+				if (fileOut != null) {
+					fileOut.close();
+					System.out.println("Closing file.");
+				}
+			}
+			catch (IOException exc){
+				System.out.println("Error encountered while trying to close file.");
+			}	
+		}
+	}
+}
