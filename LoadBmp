@@ -1,0 +1,58 @@
+void LoadBmpMap(FileHandle BmpImage){
+		//BufferedImage img = null;
+		Pixmap img = null;
+		this.shelterArray = new ArrayList<ShelterObject>();
+		for (int i = 0; i < 256; i++){
+			shelterArray.add(null);
+		}
+		//System.out.println("Size of array: " + shelterArray.size());
+		//System.out.println(BmpImage.path());
+		try {
+			img = new Pixmap(BmpImage);
+			for (int i = 0; i < img.getHeight(); i++){
+				for (int j = 0; j < img.getWidth(); j++){
+					//getRGB returns RGBA format, color uses ARGB format, must reorder.
+					int pixInt = img.getPixel(j, i);
+					pixInt = (pixInt << 24) + (img.getPixel(j, i) >> 8);
+					Color pixColor = new Color(pixInt);
+					
+					int pixRed = pixColor.getRed();
+					int pixGreen = pixColor.getGreen();
+					int pixBlue = pixColor.getBlue();
+					int pixAlpha = pixColor.getAlpha();
+					
+					if (pixBlue == 255){
+						//System.out.println("Color Integer value:" + pixInt);
+						//System.out.print("Read colors- R:" + pixRed + " G:" + pixGreen + " B:" + pixBlue + " A:" + pixAlpha);
+						//System.out.println(" at x=" + j + " y=" + i);
+						if (shelterArray.get(pixRed) != null){
+							map[j][i][0] = shelterArray.get(pixRed);
+							shelterArray.get(pixRed).addCoordinate(new Vector3(j, i, 0));
+							if (pixGreen == 100){
+								shelterArray.get(pixRed).setOrigin(new Vector3(j, i, 0), 0);
+							}
+						}
+						else{
+							Vector3 pos = new Vector3(j, i, 0);
+							shelterArray.add(pixRed, new ShelterObject(pos,1,1));
+							map[j][i][0] = shelterArray.get(pixRed);
+							shelterArray.get(pixRed).addCoordinate(pos);
+						}
+					}
+					else if (pixGreen == 255){
+						int food = MathUtils.random(0,3)*MathUtils.random(-35,1);
+						if (food < 0) food = 0;
+						map[j][i][0] = new FieldObject(new Vector3(j, i, 0), food);
+					}
+				}	
+			}
+		}
+		catch (Exception exc){
+			System.out.println("Error encounted while loading bmp file: ");
+			exc.printStackTrace();
+		}
+		finally{
+			img.dispose();
+		}
+	}
+	
